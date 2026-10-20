@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     
     @State private var selection: SidebarItems? = .general
-    @StateObject private var settings = SettingsManager()
+    @ObservedObject private var settings = SettingsManager.shared
     
     var body: some View {
         NavigationSplitView {

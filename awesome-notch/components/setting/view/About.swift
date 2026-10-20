@@ -17,7 +17,7 @@ struct About: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
                     
-                Text("Version 1.5.3")
+                Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—")")
                     .foregroundColor(.secondary)
             }
             Spacer()

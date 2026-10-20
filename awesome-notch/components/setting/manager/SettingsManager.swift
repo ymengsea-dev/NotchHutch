@@ -2,15 +2,16 @@ import SwiftUI
 import Combine
 
 class SettingsManager: ObservableObject{
-    
+    static let shared = SettingsManager()
+
     //---- general settings -----
-    @AppStorage("notchSize") var notchSizeRaw = NotchSize.small.rawValue
+    @AppStorage("notchSize", store: .awesomeNotch) var notchSizeRaw = NotchSize.small.rawValue
     var notchSize: NotchSize {
         get { NotchSize(rawValue: notchSizeRaw) ?? .small }
         set { notchSizeRaw = newValue.rawValue }
     }
     
-    @AppStorage("notchColor") var notchColorName = "black"
+    @AppStorage("notchColor", store: .awesomeNotch) var notchColorName = "black"
     var notchColor: Color {
         switch notchColorName {
         case "black": return .black
@@ -43,7 +44,7 @@ class SettingsManager: ObservableObject{
         ("teal", .teal)
     ]
     
-    @AppStorage("expandSensitivity") var expandSensitivityRaw: String = "100ms"
+    @AppStorage("expandSensitivity", store: .awesomeNotch) var expandSensitivityRaw: String = "100ms"
     var expandSensitivity: Double {
         get {
             // Convert from "100ms" format to seconds (0.1)
@@ -62,7 +63,7 @@ class SettingsManager: ObservableObject{
         ("Slow", "500ms", 0.5),
     ]
     
-    @AppStorage("isLaunchAtLogin") var isLaunchAtLogin = false{
+    @AppStorage("isLaunchAtLogin", store: .awesomeNotch) var isLaunchAtLogin = false{
         didSet{
             // when the setting change update the system
             LaunchManager.shared.setLaunchAtLogin(isLaunchAtLogin)
@@ -76,11 +77,15 @@ class SettingsManager: ObservableObject{
         }
     }
     
-    @AppStorage("isEnableAirDrop") var isEnableAirDrop = true
-    @AppStorage("isSyncWithMission") var isSyncWithMission = false
-    
+    @AppStorage("isEnableAirDrop", store: .awesomeNotch) var isEnableAirDrop = true
+    @AppStorage("isSyncWithMission", store: .awesomeNotch) var isSyncWithMission = false
+    // When true, the notch only expands on click; hovering does nothing.
+    // When false (default), hover-to-expand is used, with a minimum dwell
+    // delay to filter out brief accidental passes over the notch.
+    @AppStorage("isClickToExpand", store: .awesomeNotch) var isClickToExpand = false
+
     // ----- media setting -----
-    @AppStorage("colorSpectrum") var colorSpectrumName = "white" // color spectrum
+    @AppStorage("colorSpectrum", store: .awesomeNotch) var colorSpectrumName = "white" // color spectrum
     var colorSpectrum: AnyShapeStyle {
         switch colorSpectrumName {
         case "neon-fire":
@@ -137,8 +142,8 @@ class SettingsManager: ObservableObject{
         ("teal", AnyShapeStyle(Color.teal))
     ]
     
-    @AppStorage("notchBorder") var isNotchBorder = false // border around notch
-    @AppStorage("NotchBorderColor") var notchBorderColorName = "pink"
+    @AppStorage("notchBorder", store: .awesomeNotch) var isNotchBorder = false // border around notch
+    @AppStorage("NotchBorderColor", store: .awesomeNotch) var notchBorderColorName = "pink"
     var NotchBorderColor: Color {
         switch notchBorderColorName {
         case "black": return .black
@@ -170,23 +175,21 @@ class SettingsManager: ObservableObject{
         ("mint", .mint),
         ("teal", .teal)
     ]
-    @AppStorage("overflowNotchWhenPlaying") var isOverflowNotchWhenPlaying = true  // extend side noth when playing
-    
-    
+    @AppStorage("overflowNotchWhenPlaying", store: .awesomeNotch) var isOverflowNotchWhenPlaying = true  // extend side noth when playing
+
+
     // ----- shelf setting -----
-    @AppStorage("isOpenFileWhenHasItem") var isOpenFileWhenHasItem = true
-    @AppStorage("isGrabBunch") var isGrabBunch = true
-    
+    @AppStorage("isOpenFileWhenHasItem", store: .awesomeNotch) var isOpenFileWhenHasItem = true
+    @AppStorage("isGrabBunch", store: .awesomeNotch) var isGrabBunch = true
+
     // ---- webcame setting ----
-    @AppStorage("isEnableWebcame") var isEnableWebcame = true // enable webcame in home tab
-    @AppStorage(
-        "webcameShape"
-    ) var webcameShapeRaw: String = WebcameShape.roundedRectangle.rawValue  // webcame shape
+    @AppStorage("isEnableWebcame", store: .awesomeNotch) var isEnableWebcame = true // enable webcame in home tab
+    @AppStorage("webcameShape", store: .awesomeNotch) var webcameShapeRaw: String = WebcameShape.roundedRectangle.rawValue  // webcame shape
     var webcameShape: WebcameShape {
         get { WebcameShape(rawValue: webcameShapeRaw) ?? .roundedRectangle }
         set { webcameShapeRaw = newValue.rawValue }
     }
-    @AppStorage("isKeepNotchExtendedWhenCameraOn") var isKeepNotchExtendedWhenCameraOn = true // keep notch extended when camera is on
-    @AppStorage("isEnableWebcameTab") var isEnableWebcameTab = false // seperate webcame another tab
+    @AppStorage("isKeepNotchExtendedWhenCameraOn", store: .awesomeNotch) var isKeepNotchExtendedWhenCameraOn = true // keep notch extended when camera is on
+    @AppStorage("isEnableWebcameTab", store: .awesomeNotch) var isEnableWebcameTab = false // seperate webcame another tab
     
 }

@@ -3,18 +3,20 @@ import AVFoundation
 import Combine
 
 class CameraManager: ObservableObject {
+    static let shared = CameraManager()
+
     @Published var session = AVCaptureSession()
 
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
-    
+
     func checkPermissions() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             setupSession()
         case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .video) { granted in
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 if granted {
-                    self.setupSession()
+                    self?.setupSession()
                 }
             }
         default: break

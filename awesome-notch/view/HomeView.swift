@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     
-    @StateObject var nowPlaying = MusicManager.shared
+    @ObservedObject var nowPlaying = MusicManager.shared
     let spacing: CGFloat = 10
     @EnvironmentObject var settings: SettingsManager
     
@@ -107,7 +107,6 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             nowPlaying.fetchNowPlaying()
-            nowPlaying.setupNotifications()
         }
     }
 }

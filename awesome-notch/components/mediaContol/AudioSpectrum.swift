@@ -2,81 +2,53 @@ import SwiftUI
 
 struct AudioSpectrum: View {
     let isPlaying: Bool
-    @State private var barHeights: [CGFloat] = []
-    @State private var timer: Timer?
     @EnvironmentObject var settings: SettingsManager
     private let barCount = 4
     private let minHeight: CGFloat = 2
     private let maxHeight: CGFloat = 16
-    
+
     var body: some View {
+        Group {
+            if isPlaying {
+                // TimelineView suspends automatically when the view is not
+                // being drawn (occluded window, display asleep) — unlike a
+                // Timer in .common mode, which fires forever.
+                TimelineView(.periodic(from: .now, by: 0.15)) { context in
+                    bars(heights: randomHeights())
+                        .animation(.easeInOut(duration: 0.15), value: context.date)
+                }
+            } else {
+                bars(heights: Array(repeating: minHeight, count: barCount))
+                    .animation(.easeOut(duration: 0.2), value: isPlaying)
+            }
+        }
+        .frame(height: maxHeight)
+    }
+
+    private func bars(heights: [CGFloat]) -> some View {
         HStack(spacing: 2.5) {
             ForEach(0..<barCount, id: \.self) { index in
                 RoundedRectangle(cornerRadius: 1.5)
                     .fill(settings.colorSpectrum)
                     .frame(
                         width: 2.5,
-                        height: isPlaying ? barHeights[safe: index] ?? minHeight : minHeight
+                        height: heights[safe: index] ?? minHeight
                     )
             }
         }
-        .frame(height: maxHeight)
-        .onAppear {
-            initializeBars()
-            if isPlaying {
-                startAnimation()
-            }
-        }
-        .onChange(of: isPlaying) { newValue, _ in
-            if newValue {
-                startAnimation()
+    }
+
+    private func randomHeights() -> [CGFloat] {
+        (0..<barCount).map { index in
+            // Create a more realistic spectrum pattern
+            // Lower frequencies (left) tend to be higher, higher frequencies (right) vary more
+            let baseHeight: CGFloat
+            if index < 2 {
+                baseHeight = CGFloat.random(in: maxHeight * 0.6...maxHeight)
             } else {
-                stopAnimation()
+                baseHeight = CGFloat.random(in: maxHeight * 0.3...maxHeight * 0.8)
             }
-        }
-        .onDisappear {
-            stopAnimation()
-        }
-    }
-    
-    private func initializeBars() {
-        barHeights = Array(repeating: minHeight, count: barCount)
-    }
-    
-    private func startAnimation() {
-        stopAnimation() // Clean up any existing timer
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            updateBarHeights()
-        }
-        RunLoop.current.add(timer!, forMode: .common)
-    }
-    
-    private func stopAnimation() {
-        timer?.invalidate()
-        timer = nil
-        withAnimation(.easeOut(duration: 0.2)) {
-            barHeights = Array(repeating: minHeight, count: barCount)
-        }
-    }
-    
-    private func updateBarHeights() {
-        guard isPlaying else {
-            stopAnimation()
-            return
-        }
-        
-        withAnimation(.easeInOut(duration: 0.1)) {
-            barHeights = (0..<barCount).map { index in
-                // Create a more realistic spectrum pattern
-                // Lower frequencies (left) tend to be higher, higher frequencies (right) vary more
-                let baseHeight: CGFloat
-                if index < 2 {
-                    baseHeight = CGFloat.random(in: maxHeight * 0.6...maxHeight)
-                } else {
-                    baseHeight = CGFloat.random(in: maxHeight * 0.3...maxHeight * 0.8)
-                }
-                return max(minHeight, min(maxHeight, baseHeight))
-            }
+            return max(minHeight, min(maxHeight, baseHeight))
         }
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FileView: View {
     let spacing: CGFloat = 10
-    @ObservedObject private var settings = SettingsManager()
+    @ObservedObject private var settings = SettingsManager.shared
     
     var body: some View {
         GeometryReader { geo in

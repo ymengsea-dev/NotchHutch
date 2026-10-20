@@ -307,7 +307,7 @@ awesome-notch/
 
 ## 📦 Requirements
 
-- **macOS**: 12.0 (Monterey) or later
+- **macOS**: 15.6 (Sequoia) or later
 - **Xcode**: 14.0 or later
 - **Swift**: 5.7 or later
 - **Hardware**: MacBook with notch (MacBook Pro 14" or 16" 2021+)

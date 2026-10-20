@@ -11,6 +11,7 @@ import Sparkle
 @main
 struct awesome_notchApp: App {
     init() {
+        CrashReporter.install()
         _ = UpdateManager.shared
 
         DispatchQueue.main.async {

@@ -13,10 +13,13 @@ final class ShelfManager: ObservableObject{
             // get file url from provider
             _ = provider.loadObject(ofClass: URL.self, completionHandler: { url, error in
                 guard let url = url else {return }
-                
+
+                // Thumbnail decode happens here, on the provider's background
+                // callback queue — not on the main thread.
+                let newItem = ShelfItem(url: url)
+
                 // update ui in main thread
                 DispatchQueue.main.async{
-                    let newItem = ShelfItem(url: url)
                     // add item in the beginning
                     self.items.insert(newItem, at: 0)
                 }

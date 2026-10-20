@@ -8,7 +8,7 @@ enum Tab {
 
 struct NotchTabs: View {
     @ObservedObject var tabManager = TabManager.share
-    @ObservedObject private var settings = SettingsManager()
+    @ObservedObject private var settings = SettingsManager.shared
     
     var body: some View {
         NavigationStack{

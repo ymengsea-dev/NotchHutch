@@ -28,14 +28,17 @@ struct NotchView<Content: View>: View {
             width: expanded ? nil : collapsedWidth,
             height: expanded ? nil : collapsedHeight
         )
-        .animation(.bouncy(duration: 0.2), value: collapsedWidth)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: collapsedWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .overlay(alignment: .topLeading) {
-            // Expanded content
+            // Expanded content — scales + fades in from the notch (anchored
+            // at top, where the physical notch is), not a plain fade, so it
+            // reads as growing out of the notch rather than materializing.
             content
                 .padding(.vertical)
                 .padding(.horizontal, 35)
                 .opacity(expanded ? 1 : 0) // Hide content when collapsed
+                .scaleEffect(expanded ? 1 : 0.6, anchor: .top)
         }
         .overlay(alignment: .top) {
             // Collapsed content: artwork and spectrum positioned at top of notch
@@ -85,7 +88,7 @@ struct NotchView<Content: View>: View {
                 }
             }
         }
-        .animation(.bouncy, value: musicManager.isPlaying)
+        .animation(.spring(response: 0.32, dampingFraction: 0.6, blendDuration: 0), value: musicManager.isPlaying)
         .clipShape(NotchShape(
             topCornerRadius: expanded ? 22 : 12,
             bottomCornerRadius: expanded ? 22 : 12
@@ -97,9 +100,12 @@ struct NotchView<Content: View>: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NotchExpanded"))) { notification in
             if let isExpanded = notification.object as? Bool {
-                withAnimation(
-                    isExpanded ? .bouncy(duration: 0.2): .snappy(duration: 0.2)
-                ) {
+                // Matches NotchWindowController's window-frame timing (0.32s
+                // overshoot-bounce open / 0.2s crisp close): real spring
+                // bounce opening (low damping), fast and bounce-free closing.
+                let expandSpring = Animation.spring(response: 0.3, dampingFraction: 0.6, blendDuration: 0)
+                let collapseSpring = Animation.spring(response: 0.22, dampingFraction: 0.85, blendDuration: 0)
+                withAnimation(isExpanded ? expandSpring : collapseSpring) {
                     expanded = isExpanded
                 }
             }

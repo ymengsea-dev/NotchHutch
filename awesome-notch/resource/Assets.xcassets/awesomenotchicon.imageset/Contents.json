@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "awesomeNotchAppIcon copy (1).png",
+      "filename" : "AppIcon-256x256.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "awesomeNotchAppIcon copy (1) 1.png",
+      "filename" : "AppIcon-256x256 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "awesomeNotchAppIcon copy (1) 2.png",
+      "filename" : "AppIcon-256x256 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

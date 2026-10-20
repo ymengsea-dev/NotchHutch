@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		23E19AC2FD4C0CD357069D4C /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529E33AF65B96FBC47F6C4D1 /* CrashReporter.swift */; };
+		BA0FB838C27FED6FB2F1D5C7 /* AppDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78252F8F3D4D7EC626ACCB96 /* AppDefaults.swift */; };
 		FA0B9A9F2F29DA5200B7863A /* WebcameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0B9A9E2F29DA5100B7863A /* WebcameView.swift */; };
 		FA0B9B292F2A041800B7863A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FA0B9B282F2A041800B7863A /* Sparkle */; };
 		FA0B9B2B2F2A080F00B7863A /* UpdateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0B9B2A2F2A080B00B7863A /* UpdateManager.swift */; };
@@ -32,6 +34,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		529E33AF65B96FBC47F6C4D1 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
+		78252F8F3D4D7EC626ACCB96 /* AppDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDefaults.swift; sourceTree = "<group>"; };
 		FA0B9A9E2F29DA5100B7863A /* WebcameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebcameView.swift; sourceTree = "<group>"; };
 		FA0B9B2A2F2A080B00B7863A /* UpdateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateManager.swift; sourceTree = "<group>"; };
 		FA5455B92F0F968E00531A45 /* Awesome Notch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Awesome Notch.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -160,6 +164,8 @@
 				FAA7BA9F2F2137A500807680 /* LaunchManager.swift */,
 				FA9DFF012F134DBD00CAAC8C /* GetNotchDimension.swift */,
 				FA9DFF022F134DBD00CAAC8C /* TrackingView.swift */,
+				78252F8F3D4D7EC626ACCB96 /* AppDefaults.swift */,
+				529E33AF65B96FBC47F6C4D1 /* CrashReporter.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -341,6 +347,8 @@
 				FA9DFF182F134DBD00CAAC8C /* GetNotchDimension.swift in Sources */,
 				FA9DFF192F134DBD00CAAC8C /* SettingsView.swift in Sources */,
 				FA9DFF1D2F134DBD00CAAC8C /* FileView.swift in Sources */,
+				BA0FB838C27FED6FB2F1D5C7 /* AppDefaults.swift in Sources */,
+				23E19AC2FD4C0CD357069D4C /* CrashReporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

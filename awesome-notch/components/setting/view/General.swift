@@ -71,6 +71,21 @@ struct General: View {
             }
             
             Section {
+                // 3b. Click-to-expand toggle
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Click to expand", isOn: Binding(
+                        get: { settings.isClickToExpand },
+                        set: { newValue in
+                            settings.isClickToExpand = newValue
+                        }
+                    ))
+                    Text("Notch only expands when clicked, not on hover — avoids accidental expansion.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Section {
                 // 4. Enable AirDrop toggle
                 Toggle("Enable AirDrop", isOn: Binding(
                     get: { settings.isEnableAirDrop },

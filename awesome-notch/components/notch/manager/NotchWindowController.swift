@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import QuartzCore
 
 final class NotchWindowController {
     
@@ -18,7 +19,7 @@ final class NotchWindowController {
     private var isCameraRunning = false
     
     private var tabManager = TabManager.share
-    private let settings = SettingsManager()
+    private let settings = SettingsManager.shared
     
     private var pendingExpandWorkItem: DispatchWorkItem?
     private var tabSelectionCancellable: AnyCancellable?
@@ -31,12 +32,50 @@ final class NotchWindowController {
             .sink { [weak self] _ in
                 self?.handleSelectedTabChanged()
             }
+
+        // Registered once here (singleton) rather than in createWindow(),
+        // so recreating the window can never stack duplicate observers.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive),
+            name: NSApplication.didResignActiveNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(cameraStateChanged(_:)),
+            name: NSNotification.Name("CameraStateChanged"),
+            object: nil
+        )
     }
 
     private func handleSelectedTabChanged() {
         // Only resize if the notch window is currently expanded and visible.
         guard window != nil, trackingView?.isExpanded == true else { return }
         setExpanded(true)
+    }
+
+    // Shared by hover-expand (after its dwell delay) and click-to-expand.
+    private func performExpand() {
+        // Set tab when expanding so shelf tab is correct (e.g. after dragging files out, first hover shows home).
+        // Do not override webcame tab — keeps window at 300pt and avoids flick when re-expanding.
+        if tabManager.selectedTab != .webcame {
+            if settings.isOpenFileWhenHasItem {
+                tabManager.selectedTab = shelfManager.items.isEmpty ? .home : .file
+            } else {
+                tabManager.selectedTab = .home
+            }
+        }
+        setExpanded(true)
+        NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
     }
     
     func show() {
@@ -55,24 +94,28 @@ final class NotchWindowController {
         }
     
     private func handleGlobalDrag() {
-            let pasteboard = NSPasteboard(name: .drag)
-            
+            guard self.window != nil else { return }
+
+            // Cheap check first: is the mouse even near the notch strip?
+            // This runs for every drag event system-wide, so bail out before
+            // touching the pasteboard (which is comparatively expensive).
+            let mouseLocation = NSEvent.mouseLocation
+            guard mouseLocation.y > (NSScreen.main?.frame.height ?? 0) - 20 else { return }
+
+            // Already expanded on the file tab — nothing to do.
+            if tabManager.selectedTab == .file, trackingView?.isExpanded == true { return }
+
             // Check if what is being dragged is actually a file
-            if pasteboard.canReadObject(forClasses: [NSURL.self], options: nil) {
-                let mouseLocation = NSEvent.mouseLocation
-                guard self.window != nil else { return }
-                
-                // If the mouse is close to the top of the screen where the notch is
-                if mouseLocation.y > (NSScreen.main?.frame.height ?? 0) - 20 {
-                    // Always switch to file tab when dragging a file
-                    DispatchQueue.main.async {
-                        self.tabManager.selectedTab = .file
-                        
-                        if !(self.trackingView?.isExpanded ?? false) {
-                            self.setExpanded(true)
-                            NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
-                        }
-                    }
+            let pasteboard = NSPasteboard(name: .drag)
+            guard pasteboard.canReadObject(forClasses: [NSURL.self], options: nil) else { return }
+
+            // Always switch to file tab when dragging a file
+            DispatchQueue.main.async {
+                self.tabManager.selectedTab = .file
+
+                if !(self.trackingView?.isExpanded ?? false) {
+                    self.setExpanded(true)
+                    NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
                 }
             }
         }
@@ -94,18 +137,20 @@ final class NotchWindowController {
     private func createWindow(){
         guard let screen = NSScreen.main else {return}
         
-        // Initialize notch size from settings or screen
+        // Initialize notch size: height from the real hardware notch (or a
+        // proportional fallback), width from the real hardware notch too —
+        // NOT from settingsWidth, which is the *expanded* content width and
+        // is unrelated to how wide the physical notch actually is.
         let settingsWidth = CGFloat(settings.notchSize.rawValue)
         if let screenNotchSize = screen.notchSize {
-            // Use screen notch height, but width from settings
-            notchSize = CGSize(width: settingsWidth, height: screenNotchSize.height)
+            notchSize = screenNotchSize
         } else {
             // Fallback: use proportional height
-            notchSize = CGSize(width: settingsWidth, height: settingsWidth * 32 / 100)
+            notchSize = CGSize(width: 180, height: settingsWidth * 32 / 100)
         }
-        
+
         let screenFrame = screen.frame
-        
+
         let collapsedHeight: CGFloat = (notchSize?.height ?? 42)
         let expandedWidth: CGFloat = settingsWidth // width of notch when it expanded
         let expandedHeight: CGFloat = tabManager.selectedTab == .webcame ? 300 : 140 // height of notch when it expanded
@@ -129,7 +174,14 @@ final class NotchWindowController {
         let trackingView = TrackingView(frame: NSRect(x: 0, y: 0, width: expandedWidth, height: expandedHeight))
         self.trackingView = trackingView
         
-        // Calculate collapsed notch rect (centered horizontally, at the top)
+        // Calculate collapsed notch rect (centered horizontally, at the top).
+        // Width is the real hardware notch width, NOT +100. The +100 in
+        // NotchView is only drawn while music is playing (artwork + spectrum
+        // overflowing past the physical notch) — most of the time (idle,
+        // no music) nothing is visibly drawn past the real notch, so the
+        // hover-trigger zone must match that narrower idle-state width or
+        // moving the mouse near the notch's sides (but not over it) would
+        // wrongly trigger expand.
         let collapsedNotchWidth = notchSize?.width ?? 180
         let collapsedNotchHeight = collapsedHeight
         let collapsedNotchX = (expandedWidth - collapsedNotchWidth) / 2
@@ -143,27 +195,27 @@ final class NotchWindowController {
         
         trackingView.onMouseEntered = { [weak self] in
             guard let self = self, !(self.trackingView?.isExpanded ?? false) else { return }
+            // Click-to-expand mode: hovering never auto-expands, a click does.
+            guard !self.settings.isClickToExpand else { return }
             self.pendingExpandWorkItem?.cancel()
             let workItem = DispatchWorkItem { [weak self] in
-                    guard let self = self else { return }
-                    // Set tab when expanding so shelf tab is correct (e.g. after dragging files out, first hover shows home).
-                    // Do not override webcame tab — keeps window at 300pt and avoids flick when re-expanding.
-                    if self.tabManager.selectedTab != .webcame {
-                        if self.settings.isOpenFileWhenHasItem {
-                            self.tabManager.selectedTab = self.shelfManager.items.isEmpty ? .home : .file
-                        } else {
-                            self.tabManager.selectedTab = .home
-                        }
-                    }
-                    self.setExpanded(true)
-                    NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
-                }
+                self?.performExpand()
+            }
             self.pendingExpandWorkItem = workItem
+            // Respect the user's Extend Sensitivity setting exactly — no
+            // added floor. Accidental-hover mitigation is the "Click to
+            // expand" toggle above, not a forced minimum delay here.
             DispatchQueue.main
                 .asyncAfter(
-                    deadline: .now() + settings.expandSensitivity ,
+                    deadline: .now() + settings.expandSensitivity,
                     execute: workItem
                 )
+        }
+        trackingView.onMouseDown = { [weak self] in
+            guard let self = self, self.settings.isClickToExpand,
+                  !(self.trackingView?.isExpanded ?? false) else { return }
+            self.pendingExpandWorkItem?.cancel()
+            self.performExpand()
         }
         trackingView.onMouseExited = { [weak self] in
             guard let self = self else { return }
@@ -210,28 +262,6 @@ final class NotchWindowController {
             .fullScreenAuxiliary,
             .ignoresCycle
         ]
-        
-        // Monitor application activation to handle Spaces transitions
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationDidBecomeActive),
-            name: NSApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationDidResignActive),
-            name: NSApplication.didResignActiveNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(cameraStateChanged(_:)),
-            name: NSNotification.Name("CameraStateChanged"),
-            object: nil
-        )
 
         self.window = window
     }
@@ -239,14 +269,21 @@ final class NotchWindowController {
     @objc private func cameraStateChanged(_ notification: Notification) {
         guard let isRunning = notification.object as? Bool else { return }
         isCameraRunning = isRunning
-        
+
         if settings.isKeepNotchExtendedWhenCameraOn {
             if isCameraRunning {
                 // Force expand if camera is on
                 setExpanded(true)
                 NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
+                // Collapse is impossible while pinned — no point polling the
+                // mouse 5x/second for the whole camera session.
+                stopMouseCheckTimer()
             } else {
-                // If camera stopped, check if we should collapse (e.g. mouse is out)
+                // Camera stopped: resume polling if still expanded, then
+                // collapse immediately if the mouse is already outside.
+                if trackingView?.isExpanded == true {
+                    startMouseCheckTimer()
+                }
                 checkMousePosition()
             }
         }
@@ -304,7 +341,7 @@ final class NotchWindowController {
                 x: windowMouseLocation.x,
                 y: windowFrame.height - windowMouseLocation.y
             )
-            if trackingView.collapsedNotchRect.contains(viewMouseLocation) {
+            if !settings.isClickToExpand && trackingView.collapsedNotchRect.contains(viewMouseLocation) {
                 setExpanded(true)
                 NotificationCenter.default.post(name: NSNotification.Name("NotchExpanded"), object: true)
             }
@@ -339,14 +376,14 @@ final class NotchWindowController {
             stopMouseCheckTimer()
         }
         
-        // Ensure notch size is initialized from settings
+        // Ensure notch size is initialized: height + width from the real
+        // hardware notch (see createWindow for why width isn't settingsWidth).
         let settingsWidth = CGFloat(settings.notchSize.rawValue)
         if let screenNotchSize = screen.notchSize {
-            // Use screen notch height, but width from settings
-            notchSize = CGSize(width: settingsWidth, height: screenNotchSize.height)
+            notchSize = screenNotchSize
         } else {
             // Fallback: use proportional height
-            notchSize = CGSize(width: settingsWidth, height: settingsWidth * 32 / 100)
+            notchSize = CGSize(width: 180, height: settingsWidth * 32 / 100)
         }
         
         let safeInsets = screen.safeAreaInsets
@@ -370,9 +407,17 @@ final class NotchWindowController {
         // Mark as animating
         isAnimating = true
         
-        // Animate with completion handler
+        // Animate with completion handler.
+        // Opening overshoots slightly past target size then settles back —
+        // a real visible bounce on the window frame itself (the classic
+        // "back-out" cubic-bezier trick: y > 1 control points create
+        // overshoot without needing true spring physics on an NSWindow).
+        // Closing has no bounce — a crisp, fast snap shut.
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.2
+            context.duration = expanded ? 0.32 : 0.2
+            context.timingFunction = expanded
+                ? CAMediaTimingFunction(controlPoints: 0.34, 1.56, 0.64, 1)
+                : CAMediaTimingFunction(name: .easeIn)
             window.animator().setFrame(newFrame, display: true)
         }, completionHandler: { [weak self] in
             guard let self else { return }
@@ -414,20 +459,6 @@ final class NotchWindowController {
         window.center()
         window.contentView = NSHostingView(rootView: SettingsView())
         window.makeKeyAndOrderFront(nil)
-    }
-    
-    @objc private func applySettings() {
-        // Recreate window with new settings
-        let wasVisible = window?.isVisible ?? false
-        if window != nil {
-            window?.orderOut(nil)
-            window = nil
-            trackingView = nil
-        }
-        if wasVisible {
-            createWindow()
-            show()
-        }
     }
     
 }

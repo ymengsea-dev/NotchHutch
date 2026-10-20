@@ -4,6 +4,7 @@ import SwiftUI
 class TrackingView: NSView {
     var onMouseEntered: (() -> Void)?
     var onMouseExited: (() -> Void)?
+    var onMouseDown: (() -> Void)?
     private var trackingArea: NSTrackingArea?
     var collapsedNotchRect: CGRect = .zero {
         didSet {
@@ -39,6 +40,18 @@ class TrackingView: NSView {
     
     override func mouseExited(with event: NSEvent) {
         onMouseExited?()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        // Only fires the click-to-expand callback for a click actually on
+        // the visible collapsed notch pill — not anywhere else in the window.
+        if !isExpanded {
+            let location = convert(event.locationInWindow, from: nil)
+            if collapsedNotchRect.contains(location) {
+                onMouseDown?()
+            }
+        }
+        super.mouseDown(with: event)
     }
 }
 

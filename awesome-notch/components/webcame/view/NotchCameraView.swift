@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct NotchCameraView: View {
-    @StateObject var camera = CameraManager()
+    @ObservedObject var camera = CameraManager.shared
     @State private var isCameraRunning = false
     @EnvironmentObject var settings: SettingsManager
     let width: CGFloat?
