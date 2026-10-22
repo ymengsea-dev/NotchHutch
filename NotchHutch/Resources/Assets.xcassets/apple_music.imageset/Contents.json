@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Apple_Music_icon.svg",
+      "filename" : "apple_music.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Apple_Music_icon 1.svg",
+      "filename" : "apple_music 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Apple_Music_icon 2.svg",
+      "filename" : "apple_music 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

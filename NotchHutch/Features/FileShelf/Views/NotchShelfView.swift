@@ -21,7 +21,7 @@ struct NotchShelfView: View {
                                 isDraggingOver ? .blue.opacity(0.6) : .gray.opacity(0.5)
                             )
                         VStack{
-                            Image(systemName: "tray.and.arrow.down.fill")
+                            Image(systemName: "tray.full.fill")
                                 .font(.title3)
                                 .foregroundStyle(
                                     isDraggingOver ? .blue.opacity(0.6) : .gray.opacity(0.6)
@@ -65,11 +65,12 @@ struct NotchShelfView: View {
                                                 Button {
                                                     shelfManager.remove(item)
                                                 } label: {
-                                                    Image(systemName: "minus")
-                                                        .fontWeight(.bold)
+                                                    Image(systemName: "delete.backward")
+                                                        .fontWeight(.semibold)
+                                                        .font(.caption)
                                                         .foregroundStyle(.white)
-                                                        .padding(5)
-                                                        .background(Color.red)
+                                                        .padding(2)
+                                                        .background(Color.gray)
                                                         .clipShape(Circle())
                                                         .contentShape(Circle())
                                                 }
@@ -108,7 +109,7 @@ struct NotchShelfView: View {
                                     }
                                     .frame(width: 24, height: 24)
                                     
-                                    Image(systemName: "hand.raised.fill")
+                                    Image(systemName: "hand.pinch")
                                         .font(.caption)
                                         .foregroundStyle(.white)
                                         .allowsHitTesting(false)

@@ -82,10 +82,11 @@ struct NotchCameraView: View {
             isCameraRunning = false
             NotificationCenter.default.post(name: NSNotification.Name("CameraStateChanged"), object: false)
         } else {
-            isCameraRunning = true
-            // Important: checkPermissions handles setup AND startRunning
-            camera.checkPermissions()
-            NotificationCenter.default.post(name: NSNotification.Name("CameraStateChanged"), object: true)
+            camera.checkPermissions { didStart in
+                guard didStart else { return }
+                isCameraRunning = true
+                NotificationCenter.default.post(name: NSNotification.Name("CameraStateChanged"), object: true)
+            }
         }
     }
     

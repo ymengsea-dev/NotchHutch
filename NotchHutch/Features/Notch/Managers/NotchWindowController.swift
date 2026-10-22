@@ -15,6 +15,7 @@ final class NotchWindowController {
     private var isAnimating = false
     private var mouseCheckTimer: Timer?
     private var dragMonitor: Any?
+    private var lastHandledDragPasteboardChangeCount: Int?
     
     private var isCameraRunning = false
     
@@ -87,27 +88,31 @@ final class NotchWindowController {
     }
     
     private func startDragMonitor() {
-            // monitors the mouse even when it's NOT over your window
-            dragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] event in
-                self?.handleGlobalDrag()
-            }
+        // The named drag pasteboard can retain its last file after a drop.
+        // Ignore that existing value until a new file drag changes it.
+        lastHandledDragPasteboardChangeCount = NSPasteboard(name: .drag).changeCount
+        dragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] _ in
+            self?.handleGlobalDrag()
         }
+    }
     
     private func handleGlobalDrag() {
             guard self.window != nil else { return }
 
-            // Cheap check first: is the mouse even near the notch strip?
-            // This runs for every drag event system-wide, so bail out before
-            // touching the pasteboard (which is comparatively expensive).
+            // Expand before the cursor reaches macOS's top-edge Mission Control
+            // gesture area. Use the display under the cursor, not NSScreen.main.
             let mouseLocation = NSEvent.mouseLocation
-            guard mouseLocation.y > (NSScreen.main?.frame.height ?? 0) - 20 else { return }
+            guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }),
+                  mouseLocation.y > screen.frame.maxY - 80 else { return }
 
             // Already expanded on the file tab — nothing to do.
             if tabManager.selectedTab == .file, trackingView?.isExpanded == true { return }
 
             // Check if what is being dragged is actually a file
             let pasteboard = NSPasteboard(name: .drag)
+            guard pasteboard.changeCount != lastHandledDragPasteboardChangeCount else { return }
             guard pasteboard.canReadObject(forClasses: [NSURL.self], options: nil) else { return }
+            lastHandledDragPasteboardChangeCount = pasteboard.changeCount
 
             // Always switch to file tab when dragging a file
             DispatchQueue.main.async {

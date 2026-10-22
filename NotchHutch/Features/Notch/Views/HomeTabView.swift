@@ -67,7 +67,6 @@ struct HomeTabView: View {
 
                                     Button(action: {
                                         nowPlaying.sendCommand(.togglePlayPause)
-                                        nowPlaying.isPlaying.toggle()
                                     }) {
                                         Image(systemName: nowPlaying.isPlaying ? "pause.fill" : "play.fill")
                                             .font(.title)
