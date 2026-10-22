@@ -87,6 +87,9 @@ class CameraManager: ObservableObject {
             if self.session.isRunning {
                 self.session.stopRunning()
             }
+            self.session.beginConfiguration()
+            self.session.inputs.forEach { self.session.removeInput($0) }
+            self.session.commitConfiguration()
         }
     }
 }
