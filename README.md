@@ -1,4 +1,4 @@
-# Awesome Notch
+# Notch Hutch
 
 A macOS application that transforms your MacBook's notch into an interactive control center, providing quick access to media controls and system information directly from the top of your screen.
 
@@ -180,71 +180,19 @@ Comprehensive settings panel to customize your experience:
 ## 🏗️ Project Structure
 
 ```
-awesome-notch/
-├── awesome-notch/
-│   ├── awesome_notchApp.swift          # Main app entry point
-│   │
-│   ├── components/
-│   │   ├── notch/
-│   │   │   ├── manager/
-│   │   │   │   ├── NotchWindowController.swift  # Window management & animations
-│   │   │   │   └── TabManager.swift             # Tab state management
-│   │   │   └── view/
-│   │   │       ├── NotchView.swift              # Main notch UI component
-│   │   │       └── NotchShape.swift             # Custom notch shape drawing
-│   │   │
-│   │   ├── mediaContol/
-│   │   │   ├── MusicManager.swift          # MediaRemote integration & state
-│   │   │   └── AudioSpectrum.swift         # Audio visualization component
-│   │   │
-│   │   ├── fileShelf/
-│   │   │   ├── manager/
-│   │   │   │   ├── ShelfManager.swift      # File shelf state management
-│   │   │   │   └── AirDropManager.swift    # AirDrop service integration
-│   │   │   ├── model/
-│   │   │   │   └── ShelfItem.swift         # File item data model
-│   │   │   └── view/
-│   │   │       ├── NotchShelfView.swift    # File shelf UI component
-│   │   │       ├── AirDropZoneView.swift   # AirDrop drop zone UI
-│   │   │       ├── ItemDragView.swift      # Single item drag view
-│   │   │       └── MultiItemDragView.swift # Multiple items drag view
-│   │   │
-│   │   ├── webcame/
-│   │   │   ├── manager/
-│   │   │   │   └── CameraManager.swift     # Camera session management
-│   │   │   └── view/
-│   │   │       ├── NotchCameraView.swift   # Webcam preview component
-│   │   │       └── CameraPreview.swift     # Camera preview layer
-│   │   │
-│   │   └── setting/
-│   │       ├── constraint/
-│   │       │   ├── NotchSize.swift         # Notch size options
-│   │       │   └── WebcameShape.swift      # Webcam shape options
-│   │       ├── manager/
-│   │       │   └── SettingsManager.swift   # App settings management
-│   │       └── view/
-│   │           ├── General.swift           # General settings view
-│   │           ├── Appearance.swift        # Appearance settings view
-│   │           ├── MusicControl.swift      # Music control settings view
-│   │           ├── FileShelf.swift         # File shelf settings view
-│   │           ├── Webcame.swift           # Webcam settings view
-│   │           └── About.swift             # About view
-│   │
-│   ├── view/
-│   │   ├── NotchTabs.swift                 # Tab navigation (Home/File)
-│   │   ├── HomeView.swift                  # Music control interface
-│   │   ├── FileView.swift                  # File management interface
-│   │   └── SettingsView.swift              # Settings panel
-│   │
-│   ├── utils/
-│   │   ├── GetNotchDimension.swift         # Notch size detection
-│   │   ├── TrackingView.swift              # Mouse tracking utilities
-│   │   └── LaunchManager.swift             # Launch at login management
-│   │
-│   └── resource/
-│       └── Assets.xcassets/                # App assets and icons
+NotchHutch/
+├── NotchHutch/
+│   ├── App/                                # App entry point and Info.plist
+│   ├── Features/
+│   │   ├── Notch/                          # Managers/ and Views/
+│   │   ├── FileShelf/                      # Managers/, model, and Views/
+│   │   ├── MediaControl/                   # Managers/ and spectrum UI
+│   │   ├── Settings/                       # Managers/, Models/, and Views/
+│   │   └── Webcam/                         # Managers/ and Views/
+│   ├── Shared/                             # Cross-feature helpers and services
+│   └── Resources/Assets.xcassets/          # App assets and icons
 │
-└── awesome-notch.xcodeproj/                # Xcode project files
+└── NotchHutch.xcodeproj/                   # Xcode project files
 ```
 
 ## 🔧 Technical Details
@@ -318,13 +266,13 @@ awesome-notch/
 
 ```bash
 git clone <repository-url>
-cd awesome-notch
+cd NotchHutch
 ```
 
 2. Open the project in Xcode:
 
 ```bash
-open awesome-notch.xcodeproj
+open NotchHutch.xcodeproj
 ```
 
 3. Build and run the project (⌘R)
@@ -388,7 +336,7 @@ The following features are planned for future releases:
 ### Building from Source
 
 1. Ensure you have Xcode installed
-2. Open `awesome-notch.xcodeproj`
+2. Open `NotchHutch.xcodeproj`
 3. Select your target Mac as the build destination
 4. Build and run (⌘R)
 
